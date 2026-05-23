@@ -26,10 +26,28 @@ export default function TransactionsPage() {
     }
   }, [transactions, isLoaded]);
 
-  // Handle Edit
+  // Handle Edit (Smart Auto-Updating Status)
   const handleTransactionChange = (id: number, field: string, value: string) => {
     setTransactions((prev) =>
-      prev.map((tx) => (tx.id === id ? { ...tx, [field]: value } : tx))
+      prev.map((tx) => {
+        if (tx.id !== id) return tx; // Skip if it's not the row we're editing
+
+        const updatedTx = { ...tx, [field]: value };
+
+        // Auto-change status to Credited/Debited when the amount changes
+        if (field === "amount") {
+          // If value has a "+" or is a positive number > 0
+          if (value.includes("+") || parseFloat(value) > 0) {
+            updatedTx.status = "Credited";
+          } 
+          // If value has a "-" or is a negative number < 0
+          else if (value.includes("-") || parseFloat(value) < 0) {
+            updatedTx.status = "Debited";
+          }
+        }
+
+        return updatedTx;
+      })
     );
   };
 
@@ -136,7 +154,7 @@ export default function TransactionsPage() {
                           value={tx.amount}
                           onChange={(e) => handleTransactionChange(tx.id, "amount", e.target.value)}
                           className={`w-full rounded-md border-b border-transparent bg-transparent px-4 py-3 outline-none transition-all focus:border-blue-500/50 focus:bg-blue-500/5 ${
-                            tx.amount.includes("+") ? "text-emerald-400" : "text-rose-400"
+                            tx.amount.includes("+") || parseFloat(tx.amount) > 0 ? "text-emerald-400" : "text-rose-400"
                           }`}
                         />
                       </td>
@@ -148,7 +166,8 @@ export default function TransactionsPage() {
                           className={`w-full rounded-md border-b border-transparent bg-transparent px-4 py-3 outline-none transition-all focus:border-blue-500/50 focus:bg-blue-500/5 ${
                             tx.status.toLowerCase() === "pending" ? "text-amber-400" : 
                             tx.status.toLowerCase() === "debited" ? "text-rose-400" : 
-                            "text-emerald-500"
+                            tx.status.toLowerCase() === "credited" ? "text-emerald-400" : 
+                            "text-slate-300"
                           }`}
                         />
                       </td>

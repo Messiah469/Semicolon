@@ -1,5 +1,3 @@
-
-
 "use client";
 
 import Link from "next/link";
@@ -26,24 +24,67 @@ export default function Home() {
     e.preventDefault();
     setIsDragging(false);
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      simulateUpload();
+      processFile(e.dataTransfer.files[0]);
     }
   };
 
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      simulateUpload();
+      processFile(e.target.files[0]);
     }
   };
 
-  // Simulate AI processing then redirect
-  const simulateUpload = () => {
-    setIsProcessing(true);
-    setTimeout(() => {
-      setIsProcessing(false);
-      setIsUploadModalOpen(false);
-      router.push("/dashboard");
-    }, 2500);
+  // Actual logic to parse CSV, save to LocalStorage, and redirect
+  const processFile = (file: File) => {
+    if (file.type === "application/pdf") {
+      alert("PDF parsing requires a backend service. Please upload a CSV file instead.");
+      return;
+    }
+
+    setIsProcessing(true); // Start the loading animation
+
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      const text = e.target?.result as string;
+      
+      if (text) {
+        // 1. Parse the CSV
+        const rows = text.split("\n").filter((row) => row.trim() !== "");
+        const newTransactions = rows.slice(1).map((row, index) => {
+          const columns = row.split(",");
+          return {
+            id: Date.now() + index, // Generate unique ID
+            merchant: columns[0]?.trim() || "Unknown",
+            category: columns[1]?.trim() || "Other",
+            amount: columns[2]?.trim() || "0",
+            status: columns[3]?.trim() || "Completed",
+            date: columns[4]?.trim() || new Date().toLocaleDateString('en-GB'),
+          };
+        });
+
+        // 2. Fetch existing transactions from LocalStorage
+        const existingData = localStorage.getItem("finSightTransactions");
+        let existingTransactions = [];
+        if (existingData) {
+          existingTransactions = JSON.parse(existingData);
+        }
+
+        // 3. Merge new uploads with existing data and save back to LocalStorage
+        const combinedTransactions = [...newTransactions, ...existingTransactions];
+        localStorage.setItem("finSightTransactions", JSON.stringify(combinedTransactions));
+      }
+
+      // Keep a small timeout to let the user see the "AI analyzing" animation
+      setTimeout(() => {
+        setIsProcessing(false);
+        setIsUploadModalOpen(false);
+        router.push("/dashboard"); // Redirect to dashboard
+      }, 2000);
+    };
+
+    // Read the file as text
+    reader.readAsText(file);
   };
 
   return (
@@ -64,11 +105,12 @@ export default function Home() {
           </h1>
         </div>
 
+        {/* Upgraded Dashboard Button CSS */}
         <Link
           href="/dashboard"
-          className="inline-block rounded-full border border-white/10 bg-white/5 px-6 py-2 text-sm font-medium transition-all hover:bg-white/10 hover:text-white focus:ring-2 focus:ring-blue-500/50 active:scale-95"
+          className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-500/20 transition-all hover:scale-105 hover:from-blue-500 hover:to-purple-500 active:scale-95"
         >
-          Dashboard
+          Go to Dashboard
         </Link>
       </nav>
 
@@ -92,20 +134,14 @@ export default function Home() {
           seconds.
         </p>
 
+        {/* Removed "View Demo" and centered the Upload button */}
         <div className="mt-10 flex w-full flex-col justify-center gap-4 sm:w-auto sm:flex-row">
           <button
             onClick={() => setIsUploadModalOpen(true)}
-            className="rounded-full bg-white px-8 py-4 text-base font-semibold text-slate-900 shadow-[0_0_40px_rgba(255,255,255,0.3)] transition-all hover:scale-105 hover:bg-slate-100 hover:shadow-[0_0_60px_rgba(255,255,255,0.4)] active:scale-95"
+            className="rounded-full bg-white px-10 py-4 text-base font-semibold text-slate-900 shadow-[0_0_40px_rgba(255,255,255,0.3)] transition-all hover:scale-105 hover:bg-slate-100 hover:shadow-[0_0_60px_rgba(255,255,255,0.4)] active:scale-95"
           >
             Upload Statement
           </button>
-
-          <Link
-            href="/dashboard"
-            className="flex items-center justify-center rounded-full border border-white/10 bg-white/5 px-8 py-4 text-base font-semibold transition-all hover:bg-white/10 active:scale-95"
-          >
-            View Demo
-          </Link>
         </div>
 
         <div className="mt-16 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-xs font-medium text-slate-500 sm:gap-x-8 sm:text-sm">

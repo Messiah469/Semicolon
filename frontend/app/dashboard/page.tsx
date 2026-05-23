@@ -24,8 +24,6 @@ export default function DashboardPage() {
   
   // Transactions State
   const [recentTransactions, setRecentTransactions] = useState<any[]>([]);
-  
-  const [isUploading, setIsUploading] = useState(false);
 
   const savings = income - expenses;
 
@@ -106,51 +104,6 @@ export default function DashboardPage() {
     setRecentTransactions(transactions.slice(0, 4));
   };
 
-  // Handle new file upload
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    if (file.type === "application/pdf") {
-      alert("PDF parsing requires a backend service. Please upload a CSV file instead.");
-      return;
-    }
-
-    setIsUploading(true);
-    const reader = new FileReader();
-
-    reader.onload = (e) => {
-      const text = e.target?.result as string;
-      if (text) {
-        // Parse CSV text into Transaction Objects
-        const rows = text.split("\n").filter((row) => row.trim() !== "");
-        const newTransactions = rows.slice(1).map((row, index) => {
-          const columns = row.split(",");
-          return {
-            id: Date.now() + index,
-            merchant: columns[0]?.trim() || "Unknown",
-            category: columns[1]?.trim() || "Other",
-            amount: columns[2]?.trim() || "0",
-            status: columns[3]?.trim() || "Completed",
-            date: columns[4]?.trim() || new Date().toLocaleDateString('en-GB'),
-          };
-        });
-
-        // Save to LocalStorage so the "Transactions" page can access it
-        localStorage.setItem("finSightTransactions", JSON.stringify(newTransactions));
-
-        // Delay for UI animation, then process data
-        setTimeout(() => {
-          processTransactionData(newTransactions);
-          setIsUploading(false);
-        }, 2000);
-      }
-    };
-
-    reader.readAsText(file);
-    event.target.value = ""; // reset input
-  };
-
   return (
     <main className="min-h-screen bg-black text-white">
       <div className="flex">
@@ -183,42 +136,15 @@ export default function DashboardPage() {
         {/* Main Content */}
         <section className="flex-1 p-10">
           
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-5xl font-bold">Financial Dashboard</h2>
-              <p className="mt-3 text-lg text-slate-400">
-                AI-powered analysis of your financial activity.
-              </p>
-            </div>
-            
-            <input 
-              type="file" 
-              id="dashboardUpload" 
-              accept=".csv, .pdf" 
-              onChange={handleFileUpload} 
-              className="hidden" 
-            />
-            <label 
-              htmlFor="dashboardUpload"
-              className={`cursor-pointer rounded-2xl px-7 py-4 text-lg font-semibold transition-all ${
-                isUploading 
-                  ? "bg-slate-800 text-slate-400 cursor-not-allowed pointer-events-none" 
-                  : "bg-gradient-to-r from-blue-600 to-purple-600 hover:opacity-90 hover:scale-105 active:scale-95"
-              }`}
-            >
-              {isUploading ? (
-                <span className="flex items-center gap-2 animate-pulse">
-                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-                  Analyzing Statement...
-                </span>
-              ) : (
-                "Upload Statement"
-              )}
-            </label>
+          <div className="mb-12">
+            <h2 className="text-5xl font-bold">Financial Dashboard</h2>
+            <p className="mt-3 text-lg text-slate-400">
+              AI-powered analysis of your financial activity.
+            </p>
           </div>
 
           {/* Metric Cards */}
-          <div className="mt-12 grid gap-6 md:grid-cols-4">
+          <div className="grid gap-6 md:grid-cols-4">
             <div className="rounded-3xl border border-slate-800 bg-slate-950 p-8">
               <p className="text-slate-400">Income</p>
               <div className="mt-4 flex items-center text-4xl font-bold text-emerald-400">
@@ -271,7 +197,7 @@ export default function DashboardPage() {
                     </div>
                   ))
                 ) : (
-                  <p className="text-slate-500 italic">Upload a statement to see your breakdown.</p>
+                  <p className="text-slate-500 italic">Upload a statement on the home page to see your breakdown.</p>
                 )}
               </div>
             </div>
@@ -329,7 +255,7 @@ export default function DashboardPage() {
                   ) : (
                     <tr>
                       <td colSpan={4} className="px-6 py-8 text-center text-slate-500 italic">
-                        No recent transactions found. Upload a statement.
+                        No recent transactions found. Upload a statement on the home page.
                       </td>
                     </tr>
                   )}
