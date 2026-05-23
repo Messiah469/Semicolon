@@ -1,236 +1,192 @@
-/*
-export default function TransactionsPage() {
-  return (
-    <main className="min-h-screen bg-black p-10 text-white">
-
-      <div className="flex items-center justify-between">
-
-        <div>
-          <h1 className="text-5xl font-bold">
-            Transactions
-          </h1>
-
-          <p className="mt-4 text-slate-400">
-            View and manage all categorized transactions.
-          </p>
-        </div>
-
-        <input
-          type="text"
-          placeholder="Search transactions..."
-          className="rounded-2xl border border-slate-700 bg-slate-900 px-5 py-3 outline-none"
-        />
-
-      </div>
-
-      <div className="mt-10 overflow-hidden rounded-3xl border border-slate-800">
-
-        <table className="w-full">
-
-          <thead className="bg-slate-900 text-slate-400">
-
-            <tr>
-              <th className="px-6 py-5 text-left">
-                Merchant
-              </th>
-
-              <th className="px-6 py-5 text-left">
-                Category
-              </th>
-
-              <th className="px-6 py-5 text-left">
-                Amount
-              </th>
-
-              <th className="px-6 py-5 text-left">
-                Status
-              </th>
-
-              <th className="px-6 py-5 text-left">
-                Date
-              </th>
-            </tr>
-
-          </thead>
-
-          <tbody>
-
-            <tr className="border-t border-slate-800">
-              <td className="px-6 py-5">
-                Swiggy
-              </td>
-
-              <td className="px-6 py-5 text-blue-400">
-                Food
-              </td>
-
-              <td className="px-6 py-5 text-red-400">
-                -₹450
-              </td>
-
-              <td className="px-6 py-5 text-green-400">
-                Completed
-              </td>
-
-              <td className="px-6 py-5 text-slate-400">
-                12 May
-              </td>
-            </tr>
-
-            <tr className="border-t border-slate-800">
-              <td className="px-6 py-5">
-                Amazon
-              </td>
-
-              <td className="px-6 py-5 text-purple-400">
-                Shopping
-              </td>
-
-              <td className="px-6 py-5 text-red-400">
-                -₹2,499
-              </td>
-
-              <td className="px-6 py-5 text-green-400">
-                Completed
-              </td>
-
-              <td className="px-6 py-5 text-slate-400">
-                11 May
-              </td>
-            </tr>
-
-            <tr className="border-t border-slate-800">
-              <td className="px-6 py-5">
-                Salary
-              </td>
-
-              <td className="px-6 py-5 text-green-400">
-                Income
-              </td>
-
-              <td className="px-6 py-5 text-green-400">
-                +₹50,000
-              </td>
-
-              <td className="px-6 py-5 text-green-400">
-                Credited
-              </td>
-
-              <td className="px-6 py-5 text-slate-400">
-                10 May
-              </td>
-            </tr>
-
-          </tbody>
-
-        </table>
-
-      </div>
-
-    </main>
-  );
-}
-*/
-
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-// 1. Move your static data into an array of objects so we can filter it
-const initialTransactions = [
-  { id: 1, merchant: "Swiggy", category: "Food", amount: -450, status: "Completed", date: "12 May" },
-  { id: 2, merchant: "Amazon", category: "Shopping", amount: -2499, status: "Completed", date: "11 May" },
-  { id: 3, merchant: "Salary", category: "Income", amount: 50000, status: "Credited", date: "10 May" },
-  { id: 4, merchant: "Netflix", category: "Subscription", amount: -649, status: "Completed", date: "09 May" },
-  { id: 5, merchant: "Uber", category: "Travel", amount: -320, status: "Pending", date: "08 May" },
+// Default data loads if the user hasn't added/deleted anything yet
+const defaultData = [
+  { id: 1, merchant: "Swiggy", category: "Food", amount: "-450", status: "Debited", date: "12/05/2026" },
+  { id: 2, merchant: "Amazon", category: "Shopping", amount: "-2499", status: "Debited", date: "11/05/2026" },
+  { id: 3, merchant: "Salary", category: "Income", amount: "+50000", status: "Credited", date: "10/05/2026" },
+  { id: 4, merchant: "Netflix", category: "Subscription", amount: "-649", status: "Debited", date: "09/05/2026" },
+  { id: 5, merchant: "Uber", category: "Travel", amount: "-320", status: "Pending", date: "08/05/2026" },
 ];
 
 export default function TransactionsPage() {
-  // 2. Set up state for the search bar
   const [searchQuery, setSearchQuery] = useState("");
+  const [transactions, setTransactions] = useState<any[]>([]);
+  const [isLoaded, setIsLoaded] = useState(false);
 
-  // 3. Filter the transactions based on what the user types (checks merchant or category)
-  const filteredTransactions = initialTransactions.filter((tx) =>
+  // Load data from LocalStorage on mount
+  useEffect(() => {
+    const savedData = localStorage.getItem("finSightTransactions");
+    if (savedData) {
+      setTransactions(JSON.parse(savedData));
+    } else {
+      setTransactions(defaultData);
+    }
+    setIsLoaded(true);
+  }, []);
+
+  // Save data to LocalStorage whenever it changes
+  useEffect(() => {
+    if (isLoaded) {
+      localStorage.setItem("finSightTransactions", JSON.stringify(transactions));
+    }
+  }, [transactions, isLoaded]);
+
+  // Handle Edit
+  const handleTransactionChange = (id: number, field: string, value: string) => {
+    setTransactions((prev) =>
+      prev.map((tx) => (tx.id === id ? { ...tx, [field]: value } : tx))
+    );
+  };
+
+  // Handle Delete
+  const handleDelete = (id: number) => {
+    setTransactions((prev) => prev.filter((tx) => tx.id !== id));
+  };
+
+  // Handle Add New Row
+  const handleAddRow = () => {
+    const today = new Date();
+    // Enforce DD/MM/YYYY format
+    const formattedDate = `${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}/${today.getFullYear()}`;
+    
+    const newTx = {
+      id: Date.now(), // Generate a unique ID
+      merchant: "New Merchant",
+      category: "Food",
+      amount: "-0",
+      status: "Debited",
+      date: formattedDate,
+    };
+    setTransactions([newTx, ...transactions]); // Add to the top of the list
+  };
+
+  const filteredTransactions = transactions.filter((tx) =>
     tx.merchant.toLowerCase().includes(searchQuery.toLowerCase()) ||
     tx.category.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  // Prevent hydration mismatch screen flash
+  if (!isLoaded) return <div className="min-h-screen bg-black" />; 
+
   return (
     <main className="min-h-screen bg-black text-white p-6 md:p-10">
-      <div className="mx-auto max-w-6xl">
+      <div className="mx-auto max-w-7xl">
         
-        {/* Header Section: Responsive flexbox stacks on mobile, side-by-side on desktop */}
         <div className="mb-8 flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 className="text-4xl font-bold">Transactions</h1>
-            <p className="mt-2 text-slate-400">
-              View and manage all categorized transactions.
+            <h1 className="text-3xl font-bold tracking-tight md:text-4xl">Transactions</h1>
+            <p className="mt-2 text-sm text-slate-400 md:text-base">
+              Add, edit, or delete transactions to see real-time analytics updates.
             </p>
           </div>
 
-          {/* Search Input */}
-          <div className="w-full md:w-80">
+          <div className="flex w-full flex-col gap-3 md:w-auto md:flex-row">
             <input
               type="text"
               placeholder="Search transactions..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-full border border-slate-800 bg-slate-900 px-6 py-3 text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none"
+              className="w-full rounded-full border border-slate-800 bg-slate-900/50 px-6 py-3 text-sm text-white placeholder-slate-500 backdrop-blur-md focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all md:w-80"
             />
+            <button 
+              onClick={handleAddRow}
+              className="whitespace-nowrap rounded-full bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/20 transition-all hover:bg-blue-500 active:scale-95"
+            >
+              + Add Transaction
+            </button>
           </div>
         </div>
 
-        {/* Table Section: overflow-x-auto allows horizontal scrolling on small phones */}
-        <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-950">
-          <div className="overflow-x-auto">
-            
-            {/* min-w-[700px] ensures the table never squishes too small on mobile */}
-            <table className="w-full min-w-[700px] text-left">
-              <thead className="bg-slate-900 text-slate-400">
+        <div className="overflow-hidden rounded-3xl border border-slate-800 bg-slate-950/50 shadow-xl backdrop-blur-md">
+          <div className="w-full overflow-x-auto">
+            <table className="w-full min-w-[600px] text-left text-sm md:text-base">
+              <thead className="border-b border-slate-800 bg-slate-900/80 text-slate-400">
                 <tr>
-                  <th className="px-6 py-4 font-medium">Merchant</th>
-                  <th className="px-6 py-4 font-medium">Category</th>
-                  <th className="px-6 py-4 font-medium">Amount</th>
-                  <th className="px-6 py-4 font-medium">Status</th>
-                  <th className="px-6 py-4 font-medium">Date</th>
+                  <th className="px-6 py-5 font-medium tracking-wide">Merchant</th>
+                  <th className="px-6 py-5 font-medium tracking-wide">Category</th>
+                  <th className="px-6 py-5 font-medium tracking-wide">Amount</th>
+                  <th className="px-6 py-5 font-medium tracking-wide">Status</th>
+                  <th className="px-6 py-5 font-medium tracking-wide">Date</th>
+                  <th className="px-6 py-5 font-medium tracking-wide text-center">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800">
-                
-                {/* 4. Map over our FILTERED data to render rows dynamically */}
+              <tbody className="divide-y divide-slate-800/50">
                 {filteredTransactions.length > 0 ? (
                   filteredTransactions.map((tx) => (
-                    <tr key={tx.id} className="transition-colors hover:bg-slate-900/50">
-                      <td className="px-6 py-5">{tx.merchant}</td>
-                      
-                      {/* Dynamic Category Colors */}
-                      <td className={`px-6 py-5 ${
-                        tx.category === "Food" ? "text-blue-400" :
-                        tx.category === "Shopping" ? "text-purple-400" :
-                        tx.category === "Income" ? "text-green-400" :
-                        "text-slate-300"
-                      }`}>
-                        {tx.category}
+                    <tr key={tx.id} className="group transition-colors hover:bg-white/[0.02]">
+                      <td className="px-2 py-2">
+                        <input
+                          type="text"
+                          value={tx.merchant}
+                          onChange={(e) => handleTransactionChange(tx.id, "merchant", e.target.value)}
+                          className="w-full rounded-md border-b border-transparent bg-transparent px-4 py-3 outline-none transition-all focus:border-blue-500/50 focus:bg-blue-500/5"
+                        />
                       </td>
-                      
-                      {/* Dynamic Amount Colors (Green for positive, Red for negative) */}
-                      <td className={`px-6 py-5 ${tx.amount > 0 ? "text-green-400" : "text-red-400"}`}>
-                        {tx.amount > 0 ? `+₹${tx.amount.toLocaleString('en-IN')}` : `-₹${Math.abs(tx.amount).toLocaleString('en-IN')}`}
+                      <td className="px-2 py-2">
+                        <input
+                          type="text"
+                          value={tx.category}
+                          onChange={(e) => handleTransactionChange(tx.id, "category", e.target.value)}
+                          className={`w-full rounded-md border-b border-transparent bg-transparent px-4 py-3 outline-none transition-all focus:border-blue-500/50 focus:bg-blue-500/5 ${
+                            tx.category.toLowerCase() === "food" ? "text-blue-400" :
+                            tx.category.toLowerCase() === "shopping" ? "text-purple-400" :
+                            tx.category.toLowerCase() === "income" ? "text-emerald-400" :
+                            "text-slate-300"
+                          }`}
+                        />
                       </td>
-                      
-                      <td className="px-6 py-5 text-green-500">{tx.status}</td>
-                      <td className="px-6 py-5 text-slate-400">{tx.date}</td>
+                      <td className="px-2 py-2">
+                        <input
+                          type="text"
+                          value={tx.amount}
+                          onChange={(e) => handleTransactionChange(tx.id, "amount", e.target.value)}
+                          className={`w-full rounded-md border-b border-transparent bg-transparent px-4 py-3 outline-none transition-all focus:border-blue-500/50 focus:bg-blue-500/5 ${
+                            tx.amount.includes("+") ? "text-emerald-400" : "text-rose-400"
+                          }`}
+                        />
+                      </td>
+                      <td className="px-2 py-2">
+                        <input
+                          type="text"
+                          value={tx.status}
+                          onChange={(e) => handleTransactionChange(tx.id, "status", e.target.value)}
+                          className={`w-full rounded-md border-b border-transparent bg-transparent px-4 py-3 outline-none transition-all focus:border-blue-500/50 focus:bg-blue-500/5 ${
+                            tx.status.toLowerCase() === "pending" ? "text-amber-400" : 
+                            tx.status.toLowerCase() === "debited" ? "text-rose-400" : 
+                            "text-emerald-500"
+                          }`}
+                        />
+                      </td>
+                      <td className="px-2 py-2">
+                        <input
+                          type="text"
+                          value={tx.date}
+                          onChange={(e) => handleTransactionChange(tx.id, "date", e.target.value)}
+                          className="w-full rounded-md border-b border-transparent bg-transparent px-4 py-3 text-slate-400 outline-none transition-all hover:text-slate-300 focus:border-blue-500/50 focus:bg-blue-500/5"
+                        />
+                      </td>
+                      {/* Delete Button */}
+                      <td className="px-4 py-2 text-center">
+                        <button 
+                          onClick={() => handleDelete(tx.id)}
+                          className="rounded-lg bg-rose-500/10 px-3 py-1.5 text-sm font-medium text-rose-500 opacity-0 transition-all hover:bg-rose-500/20 group-hover:opacity-100"
+                          title="Delete Transaction"
+                        >
+                          Delete
+                        </button>
+                      </td>
                     </tr>
                   ))
                 ) : (
-                  /* Empty state if search returns no results */
                   <tr>
-                    <td colSpan={5} className="px-6 py-10 text-center text-slate-500">
-                      No transactions found for "{searchQuery}"
+                    <td colSpan={6} className="px-6 py-12 text-center text-slate-500">
+                      No transactions found.
                     </td>
                   </tr>
                 )}
-                
               </tbody>
             </table>
           </div>
