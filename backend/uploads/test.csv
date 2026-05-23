@@ -1,0 +1,6 @@
+date,narration,debit,credit,balance
+01-01-2025,Swiggy Order,500,,10000
+02-01-2025,Salary Credited,,50000,60000
+03-01-2025,Uber Ride,300,,59700
+04-01-2025,Amazon Shopping,2000,,57700
+05-01-2025,Netflix Subscription,649,,57051
