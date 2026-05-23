@@ -2,15 +2,6 @@
 
 import { useState, useEffect } from "react";
 
-// Default data loads if the user hasn't added/deleted anything yet
-const defaultData = [
-  { id: 1, merchant: "Swiggy", category: "Food", amount: "-450", status: "Debited", date: "12/05/2026" },
-  { id: 2, merchant: "Amazon", category: "Shopping", amount: "-2499", status: "Debited", date: "11/05/2026" },
-  { id: 3, merchant: "Salary", category: "Income", amount: "+50000", status: "Credited", date: "10/05/2026" },
-  { id: 4, merchant: "Netflix", category: "Subscription", amount: "-649", status: "Debited", date: "09/05/2026" },
-  { id: 5, merchant: "Uber", category: "Travel", amount: "-320", status: "Pending", date: "08/05/2026" },
-];
-
 export default function TransactionsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [transactions, setTransactions] = useState<any[]>([]);
@@ -19,10 +10,11 @@ export default function TransactionsPage() {
   // Load data from LocalStorage on mount
   useEffect(() => {
     const savedData = localStorage.getItem("finSightTransactions");
+    // If there is data from an upload, load it. Otherwise, start totally empty.
     if (savedData) {
       setTransactions(JSON.parse(savedData));
     } else {
-      setTransactions(defaultData);
+      setTransactions([]); 
     }
     setIsLoaded(true);
   }, []);
@@ -183,7 +175,7 @@ export default function TransactionsPage() {
                 ) : (
                   <tr>
                     <td colSpan={6} className="px-6 py-12 text-center text-slate-500">
-                      No transactions found.
+                      No transactions found. Upload a statement to get started.
                     </td>
                   </tr>
                 )}
