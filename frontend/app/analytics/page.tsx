@@ -7,6 +7,7 @@ const categoryColors: Record<string, string> = {
   Shopping: "bg-purple-500",
   Travel: "bg-green-500",
   Subscription: "bg-rose-500",
+  EMI: "bg-amber-500",
   Income: "bg-emerald-500"
 };
 
@@ -14,7 +15,6 @@ export default function AnalyticsPage() {
   const [transactions, setTransactions] = useState<any[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Read the saved data from the Transactions page
   useEffect(() => {
     const savedData = localStorage.getItem("finSightTransactions");
     if (savedData) {
@@ -23,7 +23,6 @@ export default function AnalyticsPage() {
     setIsLoaded(true);
   }, []);
 
-  // Calculate metrics dynamically based on whatever is in LocalStorage
   const analytics = useMemo(() => {
     let totalIncome = 0;
     let totalExpenses = 0;
@@ -32,112 +31,124 @@ export default function AnalyticsPage() {
 
     transactions.forEach((tx) => {
       const amountValue = Number(tx.amount.replace(/[^0-9.-]+/g, ""));
+      const absAmount = Math.abs(amountValue);
 
-      if (amountValue > 0) {
-        totalIncome += amountValue;
+      if (amountValue > 0 || tx.amount.includes('+')) {
+        totalIncome += absAmount;
       } else {
-        const expense = Math.abs(amountValue);
-        totalExpenses += expense;
-        
-        if (categoryTotals[tx.category]) {
-          categoryTotals[tx.category] += expense;
-        } else {
-          categoryTotals[tx.category] = expense;
-        }
+        totalExpenses += absAmount;
+        categoryTotals[tx.category] = (categoryTotals[tx.category] || 0) + absAmount;
 
-        if (tx.category === "Subscription" || tx.category === "EMI") {
-          recurring += expense;
+        if (["Subscription", "EMI", "Rent", "Utility"].includes(tx.category)) {
+          recurring += absAmount;
         }
       }
     });
 
-    const savingsRatio = totalIncome > 0 
-      ? Math.round(((totalIncome - totalExpenses) / totalIncome) * 100) 
-      : 0;
+    const savingsRatio = totalIncome > 0 ? Math.round(((totalIncome - totalExpenses) / totalIncome) * 100) : 0;
+    
+    // Dynamic scaling for the bar graph
+    const maxVal = Math.max(totalIncome, totalExpenses) || 1;
+    const incomePercent = (totalIncome / maxVal) * 100;
+    const expensePercent = (totalExpenses / maxVal) * 100;
 
     const expensesByCategory = Object.keys(categoryTotals)
-      .filter(cat => cat !== "Income") // Don't graph income as an expense
-      .map((category) => {
-        const amount = categoryTotals[category];
-        const percentage = totalExpenses > 0 ? Math.round((amount / totalExpenses) * 100) : 0;
-        return {
-          category,
-          amount,
-          percentage,
-          color: categoryColors[category] || "bg-indigo-500", 
-        };
-      }).sort((a, b) => b.percentage - a.percentage); 
+      .filter(cat => cat !== "Income")
+      .map((category) => ({
+        category,
+        amount: categoryTotals[category],
+        percentage: totalExpenses > 0 ? Math.round((categoryTotals[category] / totalExpenses) * 100) : 0,
+        color: categoryColors[category] || "bg-indigo-500",
+      })).sort((a, b) => b.percentage - a.percentage);
 
-    return { totalIncome, totalExpenses, savingsRatio, recurring, expensesByCategory };
-  }, [transactions]); // Recalculates whenever transactions change
+    return { totalIncome, totalExpenses, savingsRatio, recurring, expensesByCategory, incomePercent, expensePercent };
+  }, [transactions]);
 
   if (!isLoaded) return <div className="min-h-screen bg-black" />;
 
   return (
     <main className="min-h-screen bg-black text-white p-6 md:p-10">
       <div className="mx-auto max-w-6xl">
-        <h1 className="text-4xl font-bold md:text-5xl">Analytics</h1>
-        <p className="mt-4 text-slate-400">
-          Expense breakdown and financial trends updated in real-time.
-        </p>
+        <h1 className="text-4xl font-bold">Analytics</h1>
+        
+        {/* Income vs Expense Summary Cards */}
+        <div className="mt-8 grid gap-6 md:grid-cols-3">
+          <div className="rounded-3xl border border-emerald-900/50 bg-emerald-950/20 p-8">
+            <p className="text-sm text-emerald-400">Total Income</p>
+            <h2 className="text-4xl font-bold mt-2">₹{analytics.totalIncome.toLocaleString("en-IN")}</h2>
+          </div>
+          <div className="rounded-3xl border border-rose-900/50 bg-rose-950/20 p-8">
+            <p className="text-sm text-rose-400">Total Expenses</p>
+            <h2 className="text-4xl font-bold mt-2">₹{analytics.totalExpenses.toLocaleString("en-IN")}</h2>
+          </div>
+          <div className="rounded-3xl border border-blue-900/50 bg-blue-950/20 p-8">
+            <p className="text-sm text-blue-400">Net Balance</p>
+            <h2 className="text-4xl font-bold mt-2">₹{(analytics.totalIncome - analytics.totalExpenses).toLocaleString("en-IN")}</h2>
+          </div>
+        </div>
 
-        <div className="mt-10 grid gap-6 md:grid-cols-2">
-          
-          {/* Monthly Spending Panel */}
+        {/* --- ADDED: Visual Bar Graph --- */}
+        <div className="mt-6 rounded-3xl border border-slate-800 bg-slate-950 p-8">
+          <h2 className="text-xl font-semibold mb-6">Income vs Expense Ratio</h2>
+          <div className="space-y-6">
+            <div>
+              <div className="flex justify-between mb-2 text-sm">
+                <span className="text-emerald-400 font-medium">Income</span>
+                <span className="font-bold">₹{analytics.totalIncome.toLocaleString("en-IN")}</span>
+              </div>
+              <div className="h-4 w-full rounded-full bg-slate-800 overflow-hidden">
+                <div className="h-full bg-emerald-500 transition-all duration-1000" style={{ width: `${analytics.incomePercent}%` }} />
+              </div>
+            </div>
+            <div>
+              <div className="flex justify-between mb-2 text-sm">
+                <span className="text-rose-400 font-medium">Expenses</span>
+                <span className="font-bold">₹{analytics.totalExpenses.toLocaleString("en-IN")}</span>
+              </div>
+              <div className="h-4 w-full rounded-full bg-slate-800 overflow-hidden">
+                <div className="h-full bg-rose-500 transition-all duration-1000" style={{ width: `${analytics.expensePercent}%` }} />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-6 grid gap-6 md:grid-cols-2">
+          {/* Monthly Spending Breakdown */}
           <div className="rounded-3xl border border-slate-800 bg-slate-950 p-8">
-            <h2 className="text-2xl font-bold">Monthly Spending</h2>
-            <div className="mt-10 space-y-6">
-              
+            <h2 className="text-2xl font-bold mb-8">Category Breakdown</h2>
+            <div className="space-y-6">
               {analytics.expensesByCategory.map((item) => (
                 <div key={item.category}>
-                  <div className="mb-2 flex justify-between font-medium">
+                  <div className="flex justify-between mb-2">
                     <p>{item.category}</p>
-                    <p className="text-slate-300">{item.percentage}% <span className="text-slate-500 text-sm">(₹{item.amount.toLocaleString("en-IN")})</span></p>
+                    <p className="text-slate-400">{item.percentage}%</p>
                   </div>
-                  <div className="h-3 overflow-hidden rounded-full bg-slate-800">
-                    <div
-                      className={`h-full rounded-full ${item.color} transition-all duration-1000 ease-out`}
-                      style={{ width: `${item.percentage}%` }} 
-                    ></div>
+                  <div className="h-3 rounded-full bg-slate-800">
+                    <div className={`h-3 rounded-full ${item.color}`} style={{ width: `${item.percentage}%` }} />
                   </div>
                 </div>
               ))}
-
-              {analytics.expensesByCategory.length === 0 && (
-                <p className="py-4 text-center text-slate-500">No expense data to display.</p>
-              )}
-
             </div>
           </div>
 
-          {/* Financial Health Panel */}
-          <div className="rounded-3xl border border-slate-800 bg-slate-950 p-8">
-            <h2 className="text-2xl font-bold">Financial Health</h2>
-            
-            <div className="mt-10">
-              <div className="rounded-2xl border border-slate-800/50 bg-slate-900 p-6 transition-all hover:border-slate-700">
-                <p className="text-sm font-medium text-slate-400">Savings Ratio</p>
-                <h3 className={`mt-2 text-4xl font-bold tracking-tight ${analytics.savingsRatio > 20 ? 'text-emerald-400' : 'text-amber-400'}`}>
-                  {analytics.savingsRatio}%
-                </h3>
+          {/* Financial Health & Recurring */}
+          <div className="space-y-6">
+            <div className="rounded-3xl border border-slate-800 bg-slate-950 p-8">
+              <h2 className="text-2xl font-bold mb-6">Financial Health</h2>
+              <div className="p-6 bg-slate-900 rounded-2xl border border-slate-800">
+                <p className="text-sm text-slate-400">Savings Ratio</p>
+                <h3 className="text-3xl font-bold mt-1">{analytics.savingsRatio}%</h3>
               </div>
+            </div>
 
-              <div className="mt-4 rounded-2xl border border-slate-800/50 bg-slate-900 p-6 transition-all hover:border-slate-700">
-                <p className="text-sm font-medium text-slate-400">Recurring Expenses</p>
-                <h3 className="mt-2 text-4xl font-bold tracking-tight text-purple-400">
-                  ₹{analytics.recurring.toLocaleString("en-IN")}
-                </h3>
-              </div>
-
-              <div className="mt-4 rounded-2xl border border-slate-800/50 bg-slate-900 p-6 transition-all hover:border-slate-700">
-                <p className="text-sm font-medium text-slate-400">Total Expenses</p>
-                <h3 className="mt-2 text-4xl font-bold tracking-tight text-rose-400">
-                  ₹{analytics.totalExpenses.toLocaleString("en-IN")}
-                </h3>
+            <div className="rounded-3xl border border-slate-800 bg-slate-950 p-8">
+              <h2 className="text-2xl font-bold mb-6">Recurring Expenses</h2>
+              <div className="p-6 bg-rose-950/20 border border-rose-900/30 rounded-2xl">
+                <p className="text-sm text-rose-400">Monthly Subscriptions & EMIs</p>
+                <h3 className="text-3xl font-bold mt-1">₹{analytics.recurring.toLocaleString("en-IN")}</h3>
               </div>
             </div>
           </div>
-
         </div>
       </div>
     </main>
