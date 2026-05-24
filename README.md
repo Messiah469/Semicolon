@@ -1,6 +1,6 @@
 FinSight AI
 
-An AI-powered financial intelligence platform that analyzes bank statements and converts raw transaction data into smart financial insights.
+An AI-powered financial analysis utility platform that instantly processes uploaded bank statements and generates categorized transaction insights, analytics, and downloadable reports without requiring user accounts.
 
 Features
 
@@ -18,29 +18,22 @@ Features
 Tech Stack
 
 I. Frontend:
-1. Built with Next.js 14, React, TypeScript & Tailwind CSS
-2. Modern FinTech Dashboard UI
-3. Drag-and-Drop Upload System
-4. Interactive KPI Cards & AI Insight Panels
-5. Responsive Dark-Themed Design
+Framework: Next.js
+Language: TypeScript
+Styling: Tailwind CSS
+Data Storage: Web LocalStorage
+PDF Generation: jsPDF, jsPDF-autotable
 
 II. Backend:
 1. FastAPI
 2. Python
 
 III. AI / Machine Learning:
-1. DistilBERT (Fine-Tuned)
-2. HuggingFace Transformers
-3. PyTorch
-4. Isolation Forest
+1. NLP
 
 IV. Data Processing:
 1. Pandas
 2. pdfplumber
-
-V. Database:
-1. SQLite (Development)
-2. PostgreSQL (Production Ready)
 
 Project Architecture
 
