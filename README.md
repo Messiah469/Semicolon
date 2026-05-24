@@ -1,8 +1,7 @@
 # FinSight AI
 
-An AI-powered financial intelligence platform that analyzes bank statements and converts raw transaction data into smart financial insights.
+An AI-powered financial analysis utility platform that instantly processes uploaded bank statements and generates categorized transaction insights, analytics, and downloadable reports without requiring user accounts.
 
----
 
 # Features
 
@@ -17,19 +16,19 @@ An AI-powered financial intelligence platform that analyzes bank statements and 
 9. REST API using FastAPI
 10. Swagger API Documentation
 
----
+
 
 # Tech Stack
 
 ## I. Frontend:
 
-1. Built with Next.js 14, React, TypeScript & Tailwind CSS
-2. Modern FinTech Dashboard UI
-3. Drag-and-Drop Upload System
-4. Interactive KPI Cards & AI Insight Panels
-5. Responsive Dark-Themed Design
+I. Frontend:
+Framework: Next.js
+Language: TypeScript
+Styling: Tailwind CSS
+Data Storage: Web LocalStorage
+PDF Generation: jsPDF, jsPDF-autotable
 
----
 
 ## II. Backend:
 
@@ -39,7 +38,6 @@ An AI-powered financial intelligence platform that analyzes bank statements and 
 4. RESTful API Architecture
 5. Real-Time Financial Data Processing
 
----
 
 ## III. AI / Machine Learning:
 
@@ -49,9 +47,9 @@ An AI-powered financial intelligence platform that analyzes bank statements and 
 4. Scikit-learn
 5. Isolation Forest Anomaly Detection
 
----
 
-## IV. Data Processing:
+III. AI / Machine Learning:
+1. NLP
 
 1. Pandas
 2. pdfplumber
@@ -59,16 +57,13 @@ An AI-powered financial intelligence platform that analyzes bank statements and 
 4. Dynamic Column Normalization
 5. Financial Data Cleaning Pipeline
 
----
-
-## V. Runtime Processing:
+Project Architecture
 
 1. Real-Time In-Memory Transaction Processing
 2. Dynamic Financial Data Analysis
 3. Lightweight Local AI Inference
 4. Database-Ready Scalable Architecture
 
----
 
 # Project Architecture
 
@@ -94,7 +89,7 @@ JSON API Response
 Interactive Dashboard
 ```
 
----
+
 
 # AI Workflow
 
@@ -108,7 +103,7 @@ Logistic Regression Model
 Predicted Financial Category
 ```
 
----
+
 
 # About FinSight AI
 
@@ -130,7 +125,6 @@ This enables:
 * privacy-focused processing,
 * and finance-specific intelligence without external AI dependency.
 
----
 
 # How FinSight AI Works
 
@@ -142,7 +136,7 @@ This enables:
 6. The insights engine generates analytics and summaries
 7. Results are returned through a FastAPI JSON API and visualized on the dashboard
 
----
+
 
 # Example AI Predictions
 
@@ -154,7 +148,6 @@ This enables:
 | MUTUAL FUND SIP             | Investment         |
 | NETFLIX SUBSCRIPTION        | Subscription       |
 
----
 
 # Key Highlights
 
