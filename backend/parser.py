@@ -1,178 +1,145 @@
 import pandas as pd
 import pdfplumber
+import re
 
 
 def extract_transactions(file_path):
 
-    # -----------------------------
+    # =========================
     # CSV FILE PROCESSING
-    # -----------------------------
+    # =========================
     if file_path.lower().endswith(".csv"):
 
-        # Read raw CSV
-        raw_df = pd.read_csv(
-            file_path,
-            header=None
-        )
+        df = pd.read_csv(file_path)
 
-        header_row = None
-
-        # Detect actual header row
-        for i, row in raw_df.iterrows():
-
-            row_values = [
-                str(value).lower()
-                for value in row.values
-            ]
-
-            if (
-                "date" in row_values
-                and (
-                    "description" in row_values
-                    or "narration" in row_values
-                )
-            ):
-
-                header_row = i
-                break
-
-        # If no valid header found
-        if header_row is None:
-
-            return pd.DataFrame()
-
-        # Reload CSV using detected header
-        df = pd.read_csv(
-            file_path,
-            header=header_row
-        )
-
-        # Clean columns
+        # Normalize column names
         df.columns = [
-            str(col).lower().strip()
+            col.strip().lower()
             for col in df.columns
         ]
 
-        # --------------------------------
-        # STANDARDIZE NARRATION
-        # --------------------------------
-        narration_columns = [
-            "narration",
-            "description",
-            "transaction details",
-            "remarks",
-            "details"
-        ]
+        # Rename common columns
+        rename_map = {
 
-        for col in narration_columns:
+            "description": "narration",
+            "transaction details": "narration",
+            "remarks": "narration",
 
-            if col in df.columns:
+            "withdrawal": "debit",
+            "withdrawals": "debit",
 
-                df.rename(
-                    columns={
-                        col: "narration"
-                    },
-                    inplace=True
-                )
+            "deposit": "credit",
+            "deposits": "credit"
 
-                break
+        }
 
-        # --------------------------------
-        # STANDARDIZE DEBIT
-        # --------------------------------
-        debit_columns = [
-            "debit",
-            "withdrawal",
-            "amount",
-            "debit amount"
-        ]
-
-        for col in debit_columns:
-
-            if col in df.columns:
-
-                df.rename(
-                    columns={
-                        col: "debit"
-                    },
-                    inplace=True
-                )
-
-                break
-
-        # --------------------------------
-        # STANDARDIZE CREDIT
-        # --------------------------------
-        credit_columns = [
-            "credit",
-            "deposit",
-            "credit amount"
-        ]
-
-        for col in credit_columns:
-
-            if col in df.columns:
-
-                df.rename(
-                    columns={
-                        col: "credit"
-                    },
-                    inplace=True
-                )
-
-                break
-
-        # --------------------------------
-        # STANDARDIZE BALANCE
-        # --------------------------------
-        balance_columns = [
-            "balance",
-            "closing balance",
-            "available balance"
-        ]
-
-        for col in balance_columns:
-
-            if col in df.columns:
-
-                df.rename(
-                    columns={
-                        col: "balance"
-                    },
-                    inplace=True
-                )
-
-                break
+        df.rename(
+            columns=rename_map,
+            inplace=True
+        )
 
         return df.fillna("")
 
-    # -----------------------------
+    # =========================
     # PDF FILE PROCESSING
-    # -----------------------------
+    # =========================
+
     rows = []
 
     with pdfplumber.open(file_path) as pdf:
 
         for page in pdf.pages:
 
-            table = page.extract_table()
+            text = page.extract_text()
 
-            if table:
+            if not text:
+                continue
 
-                for row in table[1:]:
+            lines = text.split("\n")
 
-                    if row and len(row) >= 5:
+            for line in lines:
 
-                        rows.append(row[:5])
+                # Match transaction date
+                date_match = re.search(
+                    r"\d{2}-[A-Za-z]{3}-\d{2}",
+                    line
+                )
+
+                if not date_match:
+                    continue
+
+                date = date_match.group()
+
+                # Extract all money values
+                amounts = re.findall(
+                    r"\$[\d,]+\.\d{2}",
+                    line
+                )
+
+                # Remove date from narration
+                narration = re.sub(
+                    r"\d{2}-[A-Za-z]{3}-\d{2}",
+                    "",
+                    line
+                )
+
+                # Remove amounts from narration
+                for amt in amounts:
+                    narration = narration.replace(
+                        amt,
+                        ""
+                    )
+
+                # Remove CR / DR
+                narration = narration.replace(
+                    "CR",
+                    ""
+                )
+
+                narration = narration.replace(
+                    "DR",
+                    ""
+                )
+
+                narration = narration.strip()
+
+                debit = ""
+                credit = ""
+                balance = ""
+
+                # Heuristic parsing
+                if len(amounts) == 1:
+
+                    credit = amounts[0]
+
+                elif len(amounts) >= 2:
+
+                    credit = amounts[0]
+
+                    balance = amounts[1]
+
+                rows.append([
+
+                    date,
+                    narration,
+                    debit,
+                    credit,
+                    balance
+
+                ])
 
     df = pd.DataFrame(
+
         rows,
+
         columns=[
+
             "date",
             "narration",
             "debit",
             "credit",
             "balance"
+
         ]
     )
 
