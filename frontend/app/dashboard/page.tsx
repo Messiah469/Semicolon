@@ -127,8 +127,9 @@ export default function DashboardPage() {
             <Link href="/insights" className="block w-full rounded-2xl px-5 py-4 text-left text-lg text-slate-400 hover:bg-slate-900">
               AI Insights
             </Link>
+            {/* UPDATED: Changed Settings to Downloads */}
             <Link href="/settings" className="block w-full rounded-2xl px-5 py-4 text-left text-lg text-slate-400 hover:bg-slate-900">
-              Settings
+              Downloads
             </Link>
           </div>
         </aside>

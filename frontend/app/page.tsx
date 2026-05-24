@@ -106,6 +106,7 @@ export default function Home() {
         </div>
 
         {/* Upgraded Dashboard Button CSS */}
+        
         <Link
           href="/dashboard"
           className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-500/20 transition-all hover:scale-105 hover:from-blue-500 hover:to-purple-500 active:scale-95"
@@ -113,11 +114,13 @@ export default function Home() {
           Go to Dashboard
         </Link>
       </nav>
+          
 
+          
       {/* Hero Section */}
       <section className="relative z-10 flex flex-col items-center px-6 pb-20 pt-24 text-center md:pt-32 lg:pt-40">
         <div className="group rounded-full border border-blue-500/30 bg-blue-500/10 px-5 py-2 text-xs font-medium text-blue-300 shadow-[0_0_15px_rgba(59,130,246,0.15)] transition-all hover:bg-blue-500/20 md:text-sm">
-          ✨ AI-Powered Financial Intelligence
+          ✨ AI-Powered Financial Insights
         </div>
 
         <h1 className="mt-8 max-w-4xl text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
