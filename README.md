@@ -1,54 +1,49 @@
-# FinSense AI 🚀
+FinSight AI
 
-An AI-powered financial intelligence backend that analyzes bank statements using a custom fine-tuned NLP model, anomaly detection, and automated financial insights.
+An AI-powered financial intelligence platform that analyzes bank statements and converts raw transaction data into smart financial insights.
 
----
+Features
 
-# Features
+1. Upload Bank Statements (PDF / CSV)
+2. Extract Transactions Automatically
+3. Custom Fine-Tuned Transformer AI Model
+4. AI-Based Transaction Categorization
+5. Expense Analytics Dashboard
+6. Recurring Subscription Detection
+7. Financial Insights & Recommendations
+8. Fraud / Anomaly Detection
+9. REST API using FastAPI
+10. Swagger API Documentation
 
-✅ Upload Bank Statements (PDF / CSV)
+Tech Stack
 
-✅ Extract Transactions Automatically
+I. Frontend:
+1. Built with Next.js 14, React, TypeScript & Tailwind CSS
+2. Modern FinTech Dashboard UI
+3. Drag-and-Drop Upload System
+4. Interactive KPI Cards & AI Insight Panels
+5. Responsive Dark-Themed Design
 
-✅ Custom Fine-Tuned Transformer AI Model
+II. Backend:
+1. FastAPI
+2. Python
 
-✅ AI-Based Transaction Categorization
+III. AI / Machine Learning:
+1. DistilBERT (Fine-Tuned)
+2. HuggingFace Transformers
+3. PyTorch
+4. Isolation Forest
 
-✅ Fraud / Anomaly Detection
+IV. Data Processing:
+1. Pandas
+2. pdfplumber
 
-✅ Financial Insights Generation
+V. Database:
+1. SQLite (Development)
+2. PostgreSQL (Production Ready)
 
-✅ REST API using FastAPI
+Project Architecture
 
-✅ Swagger API Documentation
-
----
-
-# Tech Stack
-
-## Backend
-- FastAPI
-- Python
-
-## AI / Machine Learning
-- DistilBERT (Fine-Tuned)
-- HuggingFace Transformers
-- PyTorch
-- Isolation Forest
-
-## Data Processing
-- Pandas
-- pdfplumber
-
-## Database
-- SQLite (Development)
-- PostgreSQL (Production Ready)
-
----
-
-# Project Architecture
-
-```text
 PDF/CSV Statement
         ↓
 Transaction Parser
@@ -62,3 +57,5 @@ Anomaly Detection
 Financial Insights Engine
         ↓
 JSON API Response
+        ↓
+Interactive Dashboard
