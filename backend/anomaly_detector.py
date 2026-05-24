@@ -1,33 +1,70 @@
 from sklearn.ensemble import IsolationForest
 import pandas as pd
-import numpy as np
 
 
 def detect_anomalies(df):
 
-    df["debit"] = pd.to_numeric(
-        df["debit"],
-        errors="coerce"
-    ).fillna(0)
+    amount_column = None
 
+    possible_columns = [
+        "debit",
+        "amount",
+        "withdrawal",
+        "transaction_amount"
+    ]
+
+    for col in possible_columns:
+
+        if col in df.columns:
+
+            amount_column = col
+            break
+
+    # No usable amount column
+    if amount_column is None:
+
+        return []
+
+    # --------------------------------
+    # CLEAN AMOUNT VALUES
+    # --------------------------------
+    cleaned_values = (
+        df[amount_column]
+        .astype(str)
+        .str.replace("$", "", regex=False)
+        .str.replace(",", "", regex=False)
+        .str.replace("CR", "", regex=False)
+        .str.strip()
+    )
+
+    # Convert to numeric
+    cleaned_values = pd.to_numeric(
+        cleaned_values,
+        errors="coerce"
+    )
+
+    # Replace NaN with 0
+    cleaned_values = cleaned_values.fillna(0)
+
+    # Create dataframe for ML
+    values = cleaned_values.to_frame()
+
+    # Isolation Forest
     model = IsolationForest(
-        contamination=0.05,
+        contamination=0.1,
         random_state=42
     )
 
-    df["anomaly"] = model.fit_predict(
-        df[["debit"]]
-    )
+    predictions = model.fit_predict(values)
 
-    anomalies = df[
-        df["anomaly"] == -1
-    ].copy()
+    anomalies = []
 
-    anomalies = anomalies.replace(
-        [np.nan, np.inf, -np.inf],
-        0
-    )
+    for i, pred in enumerate(predictions):
 
-    return anomalies.to_dict(
-        orient="records"
-    )
+        if pred == -1:
+
+            anomalies.append(
+                df.iloc[i].to_dict()
+            )
+
+    return anomalies
