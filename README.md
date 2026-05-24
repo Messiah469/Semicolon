@@ -2,7 +2,6 @@
 
 An AI-powered financial analysis utility platform that instantly processes uploaded bank statements and generates categorized transaction insights, analytics, and downloadable reports without requiring user accounts.
 
----
 
 # Features
 
@@ -17,7 +16,7 @@ An AI-powered financial analysis utility platform that instantly processes uploa
 9. REST API using FastAPI
 10. Swagger API Documentation
 
----
+
 
 # Tech Stack
 
@@ -30,7 +29,6 @@ Styling: Tailwind CSS
 Data Storage: Web LocalStorage
 PDF Generation: jsPDF, jsPDF-autotable
 
----
 
 ## II. Backend:
 
@@ -40,7 +38,6 @@ PDF Generation: jsPDF, jsPDF-autotable
 4. RESTful API Architecture
 5. Real-Time Financial Data Processing
 
----
 
 ## III. AI / Machine Learning:
 
@@ -50,7 +47,6 @@ PDF Generation: jsPDF, jsPDF-autotable
 4. Scikit-learn
 5. Isolation Forest Anomaly Detection
 
----
 
 III. AI / Machine Learning:
 1. NLP
@@ -68,7 +64,6 @@ Project Architecture
 3. Lightweight Local AI Inference
 4. Database-Ready Scalable Architecture
 
----
 
 # Project Architecture
 
@@ -94,7 +89,7 @@ JSON API Response
 Interactive Dashboard
 ```
 
----
+
 
 # AI Workflow
 
@@ -108,7 +103,7 @@ Logistic Regression Model
 Predicted Financial Category
 ```
 
----
+
 
 # About FinSight AI
 
@@ -130,7 +125,6 @@ This enables:
 * privacy-focused processing,
 * and finance-specific intelligence without external AI dependency.
 
----
 
 # How FinSight AI Works
 
@@ -142,7 +136,7 @@ This enables:
 6. The insights engine generates analytics and summaries
 7. Results are returned through a FastAPI JSON API and visualized on the dashboard
 
----
+
 
 # Example AI Predictions
 
@@ -154,7 +148,6 @@ This enables:
 | MUTUAL FUND SIP             | Investment         |
 | NETFLIX SUBSCRIPTION        | Subscription       |
 
----
 
 # Key Highlights
 
