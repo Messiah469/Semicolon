@@ -111,13 +111,15 @@ export default function DashboardPage() {
         {/* Sidebar */}
         <aside className="flex min-h-screen w-72 flex-col border-r border-slate-800 bg-slate-950 p-8">
           <Link href="/" className="w-fit transition-transform hover:scale-105 active:scale-95">
-            <h1 className="text-3xl font-bold hover:text-blue-400 transition-colors">FinSight AI</h1>
+            <h1 className="text-2xl font-bold hover:text-blue-400 transition-colors">FinSight AI</h1>
           </Link>
 
           <div className="mt-16 space-y-4">
-            <button className="w-full rounded-2xl bg-blue-600 px-5 py-4 text-left text-lg font-medium">
-              Dashboard
-            </button>
+            <button className="w-full flex items-center gap-3 rounded-2xl bg-blue-600/20 border border-blue-500/50 px-5 py-4 text-left text-lg font-bold text-blue-300 shadow-[0_0_15px_rgba(37,99,235,0.2)]">
+  {/* You can add an icon here for a better look! */}
+  <span className="opacity-70"></span>
+  Dashboard
+</button>
             <Link href="/transactions" className="block w-full rounded-2xl px-5 py-4 text-left text-lg text-slate-400 hover:bg-slate-900">
               Transactions
             </Link>

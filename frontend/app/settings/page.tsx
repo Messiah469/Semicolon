@@ -35,11 +35,13 @@ export default function SettingsPage() {
 "use client";
 
 import { useState } from "react";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 export default function DownloadsPage() {
   const [isDownloading, setIsDownloading] = useState(false);
 
-  const handleDownloadReport = () => {
+  const handleDownloadPDF = () => {
     setIsDownloading(true);
 
     try {
@@ -52,83 +54,77 @@ export default function DownloadsPage() {
 
       const transactions = JSON.parse(savedData);
 
-      // 1. Calculate Dashboard Metrics
+      // Calculate Metrics for PDF Summary
       let income = 0;
       let expenses = 0;
-      const categoryTotals: Record<string, number> = {};
-
       transactions.forEach((tx: any) => {
         const amount = parseFloat(tx.amount.replace(/[^0-9.-]+/g, ""));
-        const absAmount = Math.abs(amount);
-
         if (amount > 0 || tx.amount.includes('+')) {
-          income += absAmount;
+          income += Math.abs(amount);
         } else if (amount < 0 || tx.amount.includes('-')) {
-          expenses += absAmount;
-          categoryTotals[tx.category] = (categoryTotals[tx.category] || 0) + absAmount;
+          expenses += Math.abs(amount);
         }
       });
-
       const savings = income - expenses;
       const ratio = expenses > 0 ? (income / expenses) : 2;
       const score = Math.min(100, Math.floor(50 + (ratio * 15)));
 
-      // 2. Format the Text Report
-      let report = `======================================\n`;
-      report += `      FINSIGHT FINANCIAL REPORT\n`;
-      report += `======================================\n`;
-      report += `Generated on: ${new Date().toLocaleDateString('en-GB')}\n\n`;
+      // Initialize PDF Document
+      const doc = new jsPDF();
 
-      report += `[ DASHBOARD SUMMARY ]\n`;
-      report += `Total Income:    ₹${income.toLocaleString('en-IN')}\n`;
-      report += `Total Expenses:  ₹${expenses.toLocaleString('en-IN')}\n`;
-      report += `Total Savings:   ₹${savings.toLocaleString('en-IN')}\n`;
-      report += `Financial Score: ${score} / 100\n\n`;
+      // Title & Header
+      doc.setFontSize(22);
+      doc.setTextColor(37, 99, 235); // Blue color
+      doc.text("FinSight AI - Financial Report", 14, 20);
+      
+      doc.setFontSize(10);
+      doc.setTextColor(100);
+      doc.text(`Generated on: ${new Date().toLocaleDateString('en-GB')}`, 14, 28);
 
-      report += `[ EXPENSE BREAKDOWN ]\n`;
-      if (expenses > 0) {
-        Object.keys(categoryTotals)
-          .sort((a, b) => categoryTotals[b] - categoryTotals[a])
-          .forEach((cat) => {
-            const percentage = Math.round((categoryTotals[cat] / expenses) * 100);
-            report += `- ${cat}: ₹${categoryTotals[cat].toLocaleString('en-IN')} (${percentage}%)\n`;
-          });
-      } else {
-        report += `No expenses recorded.\n`;
-      }
-      report += `\n`;
+      // Summary Section
+      doc.setFontSize(14);
+      doc.setTextColor(0);
+      doc.text("Dashboard Summary", 14, 40);
+      
+      doc.setFontSize(11);
+      doc.setTextColor(60);
+      doc.text(`Total Income: INR ${income.toLocaleString('en-IN')}`, 14, 50);
+      doc.text(`Total Expenses: INR ${expenses.toLocaleString('en-IN')}`, 14, 57);
+      doc.text(`Total Savings: INR ${savings.toLocaleString('en-IN')}`, 14, 64);
+      doc.text(`Financial Score: ${score} / 100`, 14, 71);
 
-      report += `[ TRANSACTION HISTORY (${transactions.length} items) ]\n`;
-      report += `Date       | Merchant             | Category       | Amount\n`;
-      report += `---------------------------------------------------------------\n`;
-      transactions.forEach((tx: any) => {
-        // Pad strings to make the text columns align nicely
-        const date = tx.date.padEnd(10, ' ');
-        const merchant = tx.merchant.substring(0, 20).padEnd(20, ' ');
-        const category = tx.category.padEnd(14, ' ');
-        report += `${date} | ${merchant} | ${category} | ${tx.amount}\n`;
+      // Transaction Table using autoTable
+      doc.setFontSize(14);
+      doc.setTextColor(0);
+      doc.text("Transaction History", 14, 85);
+
+      // Map data for the table
+      const tableColumn = ["Date", "Merchant", "Category", "Amount", "Status"];
+      const tableRows = transactions.map((tx: any) => [
+        tx.date, 
+        tx.merchant, 
+        tx.category, 
+        tx.amount, 
+        tx.status
+      ]);
+
+      autoTable(doc, {
+        startY: 90,
+        head: [tableColumn],
+        body: tableRows,
+        theme: 'striped',
+        headStyles: { fillColor: [37, 99, 235] }, // Blue table header
       });
 
-      // 3. Trigger the Browser Download
-      const blob = new Blob([report], { type: "text/plain" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `FinSight_Report_${new Date().toISOString().split('T')[0]}.txt`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      // Save the PDF
+      doc.save(`FinSight_Report_${new Date().toISOString().split('T')[0]}.pdf`);
 
     } catch (error) {
-      console.error("Error generating report:", error);
-      alert("There was an error generating your report.");
+      console.error("Error generating PDF:", error);
+      alert("There was an error generating your PDF. Make sure you ran 'npm install jspdf jspdf-autotable' in your terminal.");
     }
 
-    // Small timeout just to show the user the button click registered
-    setTimeout(() => {
-      setIsDownloading(false);
-    }, 500);
+    setTimeout(() => setIsDownloading(false), 500);
   };
 
   return (
@@ -145,26 +141,27 @@ export default function DownloadsPage() {
 
         <div className="mt-8 space-y-6 md:mt-10">
           
+          {/* PDF Download Card */}
           <div className="flex flex-col items-start justify-between gap-6 rounded-3xl border border-slate-800 bg-slate-950 p-6 md:flex-row md:items-center md:p-8">
             <div>
-              <h2 className="text-xl font-bold md:text-2xl">
-                Export Reports
+              <h2 className="text-xl font-bold text-blue-400 md:text-2xl">
+                Full Report (PDF)
               </h2>
               <p className="mt-2 text-sm text-slate-400 md:mt-3 md:text-base">
-                Download a complete text summary of your dashboard analytics, expense breakdown, and full transaction history.
+                Download a beautifully formatted, printable PDF document containing your dashboard summary and full transaction table.
               </p>
             </div>
-            
             <button
-              onClick={handleDownloadReport}
+              onClick={handleDownloadPDF}
               disabled={isDownloading}
               className={`whitespace-nowrap rounded-xl px-6 py-3 font-semibold transition-all md:px-8 md:py-4 ${
                 isDownloading 
                   ? "bg-slate-800 text-slate-400" 
-                  : "bg-blue-600 text-white hover:bg-blue-500 hover:shadow-lg hover:shadow-blue-500/20 active:scale-95"
-              }`}
+      : "bg-slate-700 text-slate-200 hover:bg-slate-600 hover:text-white hover:shadow-lg hover:shadow-slate-500/10 active:scale-95"
+  }`}
+              
             >
-              {isDownloading ? "Generating..." : "Download Report"}
+              {isDownloading ? "Generating PDF..." : "Download PDF"}
             </button>
           </div>
 
