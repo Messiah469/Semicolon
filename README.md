@@ -1,4 +1,4 @@
-# FinSense AI 🚀
+# FinSight AI 🚀
 
 An AI-powered financial intelligence backend that analyzes bank statements using a custom fine-tuned NLP model, anomaly detection, and automated financial insights.
 
