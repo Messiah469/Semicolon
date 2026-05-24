@@ -3,41 +3,73 @@ import pandas as pd
 
 def generate_insights(df):
 
-    df["debit"] = pd.to_numeric(
-        df["debit"],
-        errors="coerce"
-    ).fillna(0)
+    amount_column = None
 
-    df["credit"] = pd.to_numeric(
-        df["credit"],
-        errors="coerce"
-    ).fillna(0)
+    possible_columns = [
+        "debit",
+        "amount",
+        "withdrawal",
+        "transaction_amount"
+    ]
 
-    total_income = float(df["credit"].sum())
+    for col in possible_columns:
 
-    total_expense = float(df["debit"].sum())
+        if col in df.columns:
 
-    category_totals = (
-        df.groupby("category")["debit"]
-        .sum()
-        .sort_values(ascending=False)
+            amount_column = col
+            break
+
+    # No usable amount column
+    if amount_column is None:
+
+        return {
+            "total_spending": 0,
+            "average_transaction": 0,
+            "total_transactions": len(df)
+        }
+
+    # --------------------------------
+    # CLEAN AMOUNTS
+    # --------------------------------
+    cleaned_values = (
+        df[amount_column]
+        .astype(str)
+        .str.replace("$", "", regex=False)
+        .str.replace(",", "", regex=False)
+        .str.replace("CR", "", regex=False)
+        .str.strip()
     )
 
-    top_category = (
-        category_totals.idxmax()
-        if not category_totals.empty
-        else "Others"
+    cleaned_values = pd.to_numeric(
+        cleaned_values,
+        errors="coerce"
     )
 
-    summary = (
-        f"Total income is ₹{total_income:.2f}. "
-        f"Total expenses are ₹{total_expense:.2f}. "
-        f"Highest spending category is {top_category}."
+    cleaned_values = cleaned_values.fillna(0)
+
+    # --------------------------------
+    # CALCULATE INSIGHTS
+    # --------------------------------
+    total_spending = float(
+        cleaned_values.sum()
+    )
+
+    average_transaction = float(
+        cleaned_values.mean()
+    )
+
+    total_transactions = int(
+        len(df)
     )
 
     return {
-        "income": total_income,
-        "expense": total_expense,
-        "top_category": top_category,
-        "summary": summary
+        "total_spending": round(
+            total_spending,
+            2
+        ),
+        "average_transaction": round(
+            average_transaction,
+            2
+        ),
+        "total_transactions": total_transactions
     }
